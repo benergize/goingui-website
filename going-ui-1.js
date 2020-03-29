@@ -1,4 +1,4 @@
-function jbui(viewElement = -1) {
+function GoingUI(viewElement = -1) {
 	
 	this.registry = {}
 	this.data = {}
@@ -189,11 +189,21 @@ function jbui(viewElement = -1) {
 
 	this.import = function(imp) {
 		
-		let s = -1;
-		if(imp.indexOf('.js') !== -1) { s = document.createElement("script"); s.src = imp; }
-		if(imp.indexOf('.css') !== -1) { s = document.createElement("link"); s.rel = "stylesheet"; s.href = imp; }
+		if(!Array.isArray(imp)) { imp = [imp]; }
 		
-		document.head.appendChild(s);
+		imp.forEach(fi=>{
+			
+			try {
+				let s = -1;
+				if(fi.indexOf('.js') !== -1) { s = document.createElement("script"); s.src = fi; }
+				if(fi.indexOf('.css') !== -1) { s = document.createElement("link"); s.rel = "stylesheet"; s.href = fi; }
+
+				document.head.appendChild(s);
+			}
+			catch(e) {
+				console.error("Could not import '" + fi + "':" + e);
+			}
+		}
 	}
 	
 	if(viewElement !== -1) {
