@@ -1,0 +1,153 @@
+body,
+			html {
+				padding: 0px;
+				margin: 0px;
+				min-height: 100vh;
+			}
+
+			body,
+			html {
+				font-family: "Segoe UI", Helevetica, Arial;
+				background: white;
+				transition: background 2s;
+				padding-bottom: 32px;
+			}
+
+			header {
+				text-align: center;
+				margin: 0 auto;
+				justify-content: center;
+				display: flex;
+				align-items: baseline;
+				width: 100%;
+				flex-flow: row wrap;
+				background: #272727;
+				color: white;
+				padding: 50px 0px;
+				transition: padding .5s ease;
+				position: sticky;
+				top: 0px;
+			}
+
+			header a:link,
+			header a:visited,
+			header a:active {
+				color: #abdcee;
+				font-weight: bold;
+				transition: color .5s;
+			}
+			header a:hover { color: #d9f5ff; }
+
+			header h1 {
+				font-family: quicksand;
+				font-size: 4rem;
+				margin: 0px !important;
+				line-height: .8em; 
+				transition: font-size .5s;
+				font-weight:400;
+			}
+
+			#title {
+				margin-top: 140px;
+				transition: all 2s ease;
+			}
+
+			#js {
+				font-weight: bold;
+			}
+
+			#going {
+				font-weight: 400;
+			}
+
+			#ui {
+				font-weight: 400;
+			}
+
+			#dash {
+				opacity: 0;
+				transition: all 1s;
+			}
+
+			a {
+				text-decoration: none;
+			}
+
+			nav {
+				flex-basis: 50%;
+			}
+
+			nav ul {
+				list-style: none;
+				margin-left: 0px;
+				text-indent: 0px;
+				text-align: left;
+				display: flex;
+				justify-content: space-evenly;
+			}
+
+			#stage {
+				padding: 24px 48px;
+				max-width:910px;
+				margin:0 auto;
+			}
+
+			.dropdown>:not(.dropDownTitle) {
+				display: none;
+			}
+
+			.dropDownTitle:hover+div {
+				display: flex;
+				width: 256px;
+			}
+
+			.dropDownTitle+div:hover {
+				width: 256px;
+				display: flex;
+			}
+
+			.dropDownTitle+div {
+				position: fixed;
+				margin-left: -88px;
+				padding: 20px 12px;
+				width: 256px;
+				justify-content: space-between;
+				flex-flow: row wrap;
+				border-radius:8px;
+				background:#272727;
+			}
+
+			footer {
+				padding: 8px 48px;
+				position: fixed;
+				bottom: 0px;
+				background: rgba(0, 0, 0, .5);
+				width: 100%;
+				color: white;
+			}
+
+			footer a:link,
+			footer a:visited {
+				color: #c0dfff;
+			}
+
+			@media only screen and (max-width:1040px) {
+				header h1 { font-size: 3rem; }
+				header nav { flex-basis:60%; }
+			}
+			
+			@media only screen and (max-width:780px) { 
+				header nav { flex-basis:100%; padding-left:0px; margin-top: 1rem;}
+				header nav ul { padding:0px; }
+			}
+			@media only screen and (max-width:600px) {
+				#stage { max-width: 100%; padding:12px 8px; }
+			}
+			
+			@media only screen and (max-width:480px) {
+				header { justify-content:space-around; align-items:center; }
+				header nav { flex-basis: 10%; margin: 0px;}
+				header nav ul { flex-flow: column; align-items:flex-end; margin:0px; }
+				header h1 { font-size: 2.5rem; }
+				h2 { text-align:center; }
+			}
