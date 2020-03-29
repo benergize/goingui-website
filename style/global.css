@@ -62,12 +62,7 @@ body,
 
 			#ui {
 				font-weight: 400;
-			}
-
-			#dash {
-				opacity: 0;
-				transition: all 1s;
-			}
+			} 
 
 			a {
 				text-decoration: none;
