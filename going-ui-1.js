@@ -203,7 +203,7 @@ function GoingUI(viewElement = -1) {
 			catch(e) {
 				console.error("Could not import '" + fi + "':" + e);
 			}
-		}
+		});
 	}
 	
 	if(viewElement !== -1) {
