@@ -15,6 +15,6 @@ app.register("home-view", {
     <span class = 'jmodel' data-jname = 'exampleModel'></span>
 
   `,
-  "script":"",
+  "script":function(){ },
   "view":"home"
 });

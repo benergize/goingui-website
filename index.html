@@ -59,17 +59,17 @@
 			var app = new GoingUI("#stage");
 			
 			app.import([
+				"components/light-select.js",
+				
 				"views/home.js",
 				"views/about.js",
 				"views/resources.js",
 				"views/download.js",
 				"views/contact.js",
-				"views/donate.js",
+				"views/donate.js"
 				
-				"components/light-select.js"
-			]);
+			], function() { app.init(); } ); 
 			
-			app.init();
 		</script>
 	</body>
 </html>

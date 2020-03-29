@@ -4,6 +4,7 @@ function GoingUI(viewElement = -1) {
 	this.data = {}
 	this.views = {};
 	this.viewElement = viewElement;
+	this.started = false;
 
 	this.set = function(varv,val=-1, caller='not input') {
 
@@ -32,7 +33,7 @@ function GoingUI(viewElement = -1) {
 	
 	this.init = function() {
 
-
+		this.started = true;
 		
 		let arr = this.select(".jbui");
 		//for(let v = 0; v < arr.length; v++) {
@@ -59,6 +60,8 @@ function GoingUI(viewElement = -1) {
 			el.addEventListener("keypress",ev=>{ this.set(name,el.value,'input'); });
 			el.addEventListener("keyup",ev=>{ this.set(name,el.value, 'input'); });
 			el.addEventListener("change",ev=>{ this.set(name,el.value,'input'); });
+			
+			if(typeof this.data[name] == "undefined") { this.data[name] = el.value; }
 		});
 
 		this.update();
@@ -68,13 +71,22 @@ function GoingUI(viewElement = -1) {
 
 		this.select('.jmodel').forEach(el=>{
 			
+			let jname = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
+			
 			
 			if(typeof el.dataset.attr != "undefined") {
-
-				el[el.dataset.attr] = typeof el.dataset.jname != "undefined" ? this.data[el.dataset.jname] : this.data[this.data[el.dataset.model]];
+				
+				if(el.dataset.attr.indexOf(".") === -1) {
+					el[el.dataset.attr] = this.data[jname];
+				}
+				else {
+					let atrchain = el.dataset.attr.split(".");
+					el[atrchain[0]][atrchain[1]] = this.data[jname];
+					console.log(atrchain);
+				}
 			}
 			else if(typeof this.data[el.dataset.value] != "undefined") { el.value = this.data[el.dataset.value]; }
-			else { el.innerHTML = this.data[el.dataset.jname]; }
+			else { el.innerHTML = typeof this.data[jname] != "undefined" ? this.data[jname] : ""; }
 
 		},this);
 		
@@ -82,7 +94,10 @@ function GoingUI(viewElement = -1) {
 			this.select('.jbind').forEach(el=>{
 				
 				let bind = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
-				el.value = this.data[bind];
+				
+				if(typeof this.data[bind] == "undefined") { this.data[bind] = el.value; this.update(); }
+				else { el.value = this.data[bind]; }
+				
 			}, this);
 		}
 	}
@@ -187,23 +202,26 @@ function GoingUI(viewElement = -1) {
 		else { return Array.from(result); }
 	}
 
-	this.import = function(imp) {
+	this.import = function(imp,the) {
 		
 		if(!Array.isArray(imp)) { imp = [imp]; }
 		
-		imp.forEach(fi=>{
+		imp.forEach(function(fi,ind){
 			
 			try {
 				let s = -1;
 				if(fi.indexOf('.js') !== -1) { s = document.createElement("script"); s.src = fi; }
 				if(fi.indexOf('.css') !== -1) { s = document.createElement("link"); s.rel = "stylesheet"; s.href = fi; }
-
+				
+				console.log(ind);
+				if(ind == imp.length - 1) { s.onload=the; console.log('teest');}
 				document.head.appendChild(s);
 			}
 			catch(e) {
 				console.error("Could not import '" + fi + "':" + e);
 			}
 		});
+		 
 	}
 	
 	if(viewElement !== -1) {
