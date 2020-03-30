@@ -31,7 +31,9 @@ function GoingUI(viewElement = -1) {
 	}
 	
 	
-	this.init = function() {
+	this.init = function(vE = -1) {
+
+		if(vE !== -1) { this.setViewElement(vE); }
 
 		this.started = true;
 		
@@ -147,7 +149,7 @@ function GoingUI(viewElement = -1) {
 			
 			this.registry[superSnake] = {"element":holderDiv,"script":templateData.script};
 			
-			if(typeof templateData.view != "undefined") { this.views[superSnake] = "templateName"; }
+			if(typeof templateData.view != "undefined") { this.views[superSnake] = templateName; }
 		}
 		
 		
@@ -223,9 +225,14 @@ function GoingUI(viewElement = -1) {
 		});
 		 
 	}
-	
-	if(viewElement !== -1) {
-		if(document.querySelectorAll(viewElement).length > 0) {
+
+	this.setViewElement = function(vE) {
+
+		if(vE === -1) { return false; }
+
+		this.viewElement = vE;
+
+		if(document.querySelectorAll(vE).length > 0) {
 			
 			let pel = this;
 			window.addEventListener("hashchange", function() {
@@ -233,6 +240,8 @@ function GoingUI(viewElement = -1) {
 			});
 		}
 	}
+	
+	if(viewElement !== -1) { this.setViewElement(viewElement); }
 	
 	return this;
 }

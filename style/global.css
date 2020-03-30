@@ -88,17 +88,21 @@ body,
 			}
 
 			.dropdown>:not(.dropDownTitle) {
-				display: none;
+				opacity: 0;
+				display:flex;
+				transition: opacity .25s;
 			}
 
 			.dropDownTitle:hover+div {
 				display: flex;
+				opacity: 1;
 				width: 256px;
 			}
 
 			.dropDownTitle+div:hover {
 				width: 256px;
 				display: flex;
+				opacity: 1;
 			}
 
 			.dropDownTitle+div {
