@@ -1,7 +1,7 @@
 app.register("home-view", {
   "html":`
     <h2>Welcome <small>:)</small></h2>
-    <p>Going-UI.js is a tiny (3.75KB) but powerful UI building framework designed to be as close to native HTML and JavaScript as possible. You can use it for basic templating, or you can use it to build your entire UI. Features include two way data binding, support for native HTML and native JS templates, and view routing. It's all about ease of use and flexibility.</p>
+    <p>Going-UI.js is a tiny (<4KB) but powerful UI building framework designed to be as close to native HTML and JavaScript as possible. You can use it for basic templating, or you can use it to build your entire UI. Features include two way data binding, support for native HTML and native JS templates, and view routing. It's all about ease of use and flexibility.</p>
     <h2>How does this compare to other frameworks?</h2>
     <p>Other frameworks have many of the same features with much steeper learning curves. The big benefit of Going-UI is that it feels like an extension of JavaScript, not its own language. Basically, if you know JS, you'll be able to get going with Going-UI in a few minutes.</p>
     <h2>Where can I learn Going-UI?</h2>

@@ -82,7 +82,7 @@ function GoingUI(viewElement = -1) {
 				else {
 					let atrchain = el.dataset.attr.split(".");
 					el[atrchain[0]][atrchain[1]] = this.data[jname];
-					console.log(atrchain);
+					 
 				}
 			}
 			else if(typeof this.data[el.dataset.value] != "undefined") { el.value = this.data[el.dataset.value]; }
@@ -213,8 +213,8 @@ function GoingUI(viewElement = -1) {
 				if(fi.indexOf('.js') !== -1) { s = document.createElement("script"); s.src = fi; }
 				if(fi.indexOf('.css') !== -1) { s = document.createElement("link"); s.rel = "stylesheet"; s.href = fi; }
 				
-				console.log(ind);
-				if(ind == imp.length - 1) { s.onload=the; console.log('teest');}
+				 
+				if(ind == imp.length - 1) { s.onload=the; }
 				document.head.appendChild(s);
 			}
 			catch(e) {

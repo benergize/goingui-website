@@ -2,64 +2,53 @@
 <html>
 	<head>
 		<meta charset = 'UTF-8'>
-		<title>Going-UI.js</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<title>Going-UI.js</title>
 	
 		<link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 		<link rel="stylesheet" href = 'style/global.css'>
 
-		
+		<!-- Import the magic -->
 		<script src = 'going-ui-1.js'></script>
 		
-		<script>
-			window.onscroll = function() {
-				if(window.scrollY >= 64) { app.select('header')[0].style.padding="20px 0px"; } 
-				if(window.scrollY == 0) { app.select('header')[0].style.padding="50px 0px"; }
-			}
-		</script>
 	</head>
+	
+	<!-- jmodel one-way binds a variable to an attribute. In this case, variable bgc is setting the style.background of the body element -->
 	<body class = 'jmodel' data-attr='style.background' data-jname = 'bgc'>
 		  
 		<header>
-		
-			<h1 id = 'title'><a href = '#home'><span id = 'going'>Going</span><span id = 'dash'>-</span><span id = 'ui'>UI</span><span id = 'js'>.js</span></a></h1>
+			<h1 id = 'title'><a href = '#home'><span id = 'going'>Going-UI</span><span id = 'js'>.js</span></a></h1>
 			
-			<nav>
-				
-				<ul>
-					<li><a href = '#about'>About</a></li>
-					<li><a href = '#download'>Download/CDN</a></li>
-					<li>
-						<div class = 'dropdown'>
-							<a href = '#resources' class = 'dropDownTitle'>Resources <i class="fas fa-angle-down"></i></a>
-							
-							<div>
-								<a href = 'https://docs.goingui.com' target = '_BLANK'><small class="fas fa-external-link-alt"></small> Docs</a>
-								<a href = 'https://github.com/benergize/goingui' target = '_BLANK'><small class="fas fa-external-link-alt"></small> GitHub</a>
-								<a href = '#'>Donate</a>
-							</div>
-						</div>
-					</li>
-					<li><a href = '#contact'>Contact</a></li>
-				</ul>
-			</nav>
-			
-		
+			<!-- The nav-bar in component form. This gets imported dat the bottom -->
+			<nav-bar></nav-bar>
 		</header>
 		
+		<!-- We use this element to display views. It's attached to the window hash -->
 		<div id = 'stage'><home-view></home-view></div>
 			
+		<!-- That's me! -->
 		<footer>
-			Software by <a href = 'http://benergize.com' target = '_BLANK'>Benergize</a>. &bullet; <light-select></light-select>
+			Software by <a href = 'http://benergize.com' target = '_BLANK'>Benergize</a>. 
+			&bullet; 
+			
+			<!-- White is a little too light for me, so you can turn down the body background with this select element. -->
+			<light-select></light-select>
 		</footer>
 		
 		<script>
 			
+			//Create a new Going-UI object, targeting the #stage as our stage.
 			var app = new GoingUI("#stage");
 			
+			//Import scripts and styles.
 			app.import([
+			
+				"scripts/scroll.js",
+			
 				"components/light-select.js",
+				"components/nav-bar.js",
 				
 				"views/home.js",
 				"views/about.js",
@@ -68,7 +57,12 @@
 				"views/contact.js",
 				"views/donate.js"
 				
-			], function() { app.init(); } ); 
+			], 
+			function() { 
+			
+				//Once we've imported everything, run app.init() to bind the bindings.
+				app.init(); 
+			} ); 
 			
 		</script>
 	</body>
