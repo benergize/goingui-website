@@ -246,6 +246,7 @@ function GoingUI(viewElement = -1,animate=true) {
 	this.changeView = function() {
 		
 		let pel = this; 
+		console.log('t',pel);
 
 		let elemental = document.querySelector(pel.viewElement);
 		let toBe = location.hash.replace("#","");
@@ -278,7 +279,7 @@ function GoingUI(viewElement = -1,animate=true) {
 			
 			let pel = this; 
 			window.addEventListener("hashchange", function() { pel.changeView(); });
-			window.addEventListener("load", function() { pel.changeView(); });
+			window.addEventListener("load",  ev=>{pel.changeView()});
 		}
 	}
 	
