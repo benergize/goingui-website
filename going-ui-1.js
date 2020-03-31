@@ -1,10 +1,11 @@
-function GoingUI(viewElement = -1) {
+function GoingUI(viewElement = -1,animate=true) {
 	
 	this.registry = {}
 	this.data = {}
 	this.views = {};
 	this.viewElement = viewElement;
 	this.started = false;
+	this.animate = animate;
 
 	this.set = function(varv,val=-1, caller='not input') {
 
@@ -31,9 +32,9 @@ function GoingUI(viewElement = -1) {
 	}
 	
 	
-	this.init = function(vE = -1) {
+	this.init = function(vE = -1, anim=this.animate) {
 
-		if(vE !== -1) { this.setViewElement(vE); }
+		if(vE !== -1) { this.setViewElement(vE,anim); }
 
 		this.started = true;
 		
@@ -56,17 +57,37 @@ function GoingUI(viewElement = -1) {
 
 		},this);
 
-		this.select('.jbind').forEach(el=>{
-			
-			let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
-			el.addEventListener("keypress",ev=>{ this.set(name,el.value,'input'); });
-			el.addEventListener("keyup",ev=>{ this.set(name,el.value, 'input'); });
-			el.addEventListener("change",ev=>{ this.set(name,el.value,'input'); });
-			
-			if(typeof this.data[name] == "undefined") { this.data[name] = el.value; }
-		});
+		this.bind();
 
 		this.update();
+
+	}
+	this.bind = function(element = -1) {
+
+
+		if(element === -1) { 
+			if(this.viewElement != -1) { this.select(this.viewElement).querySelectorAll(".jbind"); }
+			else { element = this.select('.jbind'); }
+		}
+		else {
+			if(typeof element === "string") { element = document.querySelector(element).querySelectorAll('.jbind'); }
+			else { element = element.querySelectorAll('.jbind'); }
+		}
+
+		element = Array.from(element);
+
+		let pel = this;
+
+		element.forEach(el=>{
+
+			
+			let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
+			el.addEventListener("keypress",ev=>{ pel.set(name,el.value,'input'); });
+			el.addEventListener("keyup",ev=>{ pel.set(name,el.value, 'input'); });
+			el.addEventListener("change",ev=>{ pel.set(name,el.value,'input'); });
+			
+			if(typeof pel.data[name] == "undefined") { pel.data[name] = el.value; }
+		});
 
 	}
 	this.update = function(caller){
@@ -110,6 +131,8 @@ function GoingUI(viewElement = -1) {
  
 		let holderDiv = document.createElement("template");
 		holderDiv.innerHTML = typeof templateData == "object" ? templateData.html : templateData;
+
+		if(typeof templateData.view != "undefined") { this.bind(holderDiv.content); }
 		 
 		this.registry[templateName] = {"element":holderDiv.content.children[0],"script":templateData.script};
 		
@@ -136,13 +159,14 @@ function GoingUI(viewElement = -1) {
 		else { superSnake = templateName; }
 
 		if(superSnake != "") {
+ 
 		
 			let newElement = customElements.define(superSnake,
 				class extends HTMLElement {
 					constructor() {
 						super();
 						this.outerHTML = typeof templateData == "object" ? templateData.html : templateData;
-						if(typeof templateData.script == 'function') { templateData.script(); }
+						if(typeof templateData.script == 'function') { templateData.script(); } 
 					}
 				}
 			);
@@ -182,16 +206,9 @@ function GoingUI(viewElement = -1) {
 		});
 
 		
-		if(typeof this.registry[componentToCreate].script == 'function') { this.registry[componentToCreate].script(); }
+		this.bind(newElement);
 		
-		Array.from(newElement.querySelectorAll(".jbind")).forEach(function(el) {
-			
-			let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
-			el.addEventListener("keypress",ev=>{ this.set(name,el.value,'input'); });
-			el.addEventListener("keyup",ev=>{ this.set(name,el.value, 'input'); });
-			el.addEventListener("change",ev=>{ this.set(name,el.value,'input'); });
-		},this);
-		
+		if(typeof this.registry[componentToCreate].script == 'function') { this.registry[componentToCreate].script(newElement); }
 		
 		return newElement;
 
@@ -226,18 +243,42 @@ function GoingUI(viewElement = -1) {
 		 
 	}
 
-	this.setViewElement = function(vE) {
+	this.changeView = function() {
+		
+		let pel = this; 
+
+		let elemental = document.querySelector(pel.viewElement);
+		let toBe = location.hash.replace("#","");
+		elemental.innerHTML = pel.create(pel.views[toBe],{}).innerHTML;
+		if(typeof pel.registry[pel.views[toBe]] == "function") { pel.registry[pel.views[toBe]].script(); }
+		pel.bind(this.viewElement);
+
+		
+		if(pel.animate) {
+
+			elemental.style.transition = "opacity 0s";
+			elemental.style.opacity = 0;
+			setTimeout(ev=>{
+				elemental.style.transition = "opacity .15s";
+				elemental.style.opacity=1;
+			},10);
+		}
+
+		this.select("input").forEach(el=>{el.placeholder = el.placeholder == "" ? " " : el.placeholder; });
+	}
+
+	this.setViewElement = function(vE,anim=this.animate) {
 
 		if(vE === -1) { return false; }
-
+		
+		this.animate = anim;
 		this.viewElement = vE;
 
 		if(document.querySelectorAll(vE).length > 0) {
 			
-			let pel = this;
-			window.addEventListener("hashchange", function() {
-				document.querySelector(pel.viewElement).innerHTML = pel.create(pel.views[location.hash.replace("#","")],{}).innerHTML;
-			});
+			let pel = this; 
+			window.addEventListener("hashchange", function() { pel.changeView(); });
+			window.addEventListener("load", function() { pel.changeView(); });
 		}
 	}
 	

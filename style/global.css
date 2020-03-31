@@ -40,7 +40,7 @@ body,
 
 			header h1 {
 				font-family: quicksand;
-				font-size: 4rem;
+				font-size: 3rem;
 				margin: 0px !important;
 				line-height: .8em; 
 				transition: font-size .5s;
@@ -129,6 +129,9 @@ body,
 			footer a:visited {
 				color: #c0dfff;
 			}
+p {
+	line-height:1.7rem;
+}
 
 			@media only screen and (max-width:1040px) {
 				header h1 { font-size: 3rem; }
