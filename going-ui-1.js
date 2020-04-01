@@ -1,5 +1,7 @@
 function GoingUI(viewElement = -1,animate=true) {
 	
+	var pel = this;
+
 	this.registry = {}
 	this.data = {}
 	this.views = {};
@@ -39,7 +41,7 @@ function GoingUI(viewElement = -1,animate=true) {
 		this.started = true;
 		
 		let arr = this.select(".jbui");
-		//for(let v = 0; v < arr.length; v++) {
+		
 		
 		
 		this.select(".jbui").forEach(function(el) {
@@ -58,7 +60,6 @@ function GoingUI(viewElement = -1,animate=true) {
 		},this);
 
 		this.bind();
-
 		this.update();
 
 	}
@@ -66,8 +67,7 @@ function GoingUI(viewElement = -1,animate=true) {
 
 
 		if(element === -1) { 
-			if(this.viewElement != -1) { this.select(this.viewElement).querySelectorAll(".jbind"); }
-			else { element = this.select('.jbind'); }
+			element = this.select('.jbind');
 		}
 		else {
 			if(typeof element === "string") { element = document.querySelector(element).querySelectorAll('.jbind'); }
@@ -76,11 +76,12 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		element = Array.from(element);
 
-		let pel = this;
+		
 
 		element.forEach(el=>{
 
-			
+			console.log(el);
+
 			let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
 			el.addEventListener("keypress",ev=>{ pel.set(name,el.value,'input'); });
 			el.addEventListener("keyup",ev=>{ pel.set(name,el.value, 'input'); });
@@ -89,13 +90,15 @@ function GoingUI(viewElement = -1,animate=true) {
 			if(typeof pel.data[name] == "undefined") { pel.data[name] = el.value; }
 		});
 
+		this.update();
+
 	}
 	this.update = function(caller){
-
+		
+		
 		this.select('.jmodel').forEach(el=>{
 			
 			let jname = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
-			
 			
 			if(typeof el.dataset.attr != "undefined") {
 				
@@ -118,7 +121,7 @@ function GoingUI(viewElement = -1,animate=true) {
 				
 				let bind = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
 				
-				if(typeof this.data[bind] == "undefined") { this.data[bind] = el.value; this.update(); }
+				if(typeof this.data[bind] == "undefined") { this.data[bind] = el.value; this.update('input'); }
 				else { el.value = this.data[bind]; }
 				
 			}, this);
@@ -132,11 +135,10 @@ function GoingUI(viewElement = -1,animate=true) {
 		let holderDiv = document.createElement("template");
 		holderDiv.innerHTML = typeof templateData == "object" ? templateData.html : templateData;
 
-		if(typeof templateData.view != "undefined") { this.bind(holderDiv.content); }
-		 
-		this.registry[templateName] = {"element":holderDiv.content.children[0],"script":templateData.script};
-		
-		if(typeof templateData.view != "undefined") { this.views[templateData.view] = templateName; }
+		if(typeof templateData.view != "undefined") { 
+			this.bind(holderDiv.content); 
+			this.views[templateData.view] = templateName; 
+		}
 
 		let superSnake = "";
 		if(templateName.indexOf("-") === -1) {
@@ -160,13 +162,12 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		if(superSnake != "") {
  
-		
 			let newElement = customElements.define(superSnake,
 				class extends HTMLElement {
 					constructor() {
 						super();
 						this.outerHTML = typeof templateData == "object" ? templateData.html : templateData;
-						if(typeof templateData.script == 'function') { templateData.script(); } 
+						if(typeof templateData.script == 'function') { templateData.script(this.content); } 
 					}
 				}
 			);
@@ -181,7 +182,7 @@ function GoingUI(viewElement = -1,animate=true) {
 
 	this.create = function(componentToCreate, inputs) {
 
-		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.error("Unregistered component or view '" + componentToCreate + "'."); return false; }
+		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.warn("Unregistered component or view '" + componentToCreate + "'."); return false; }
 
 		let newElement = this.registry[componentToCreate].element.cloneNode(true);
 		let sarray = Array.from(newElement.getElementsByClassName('jelement')).concat(newElement);
@@ -208,17 +209,29 @@ function GoingUI(viewElement = -1,animate=true) {
 		
 		this.bind(newElement);
 		
-		if(typeof this.registry[componentToCreate].script == 'function') { this.registry[componentToCreate].script(newElement); }
+		if(typeof this.registry[componentToCreate].script == 'function') { this.registry[componentToCreate].script(newElement.content); }
 		
 		return newElement;
 
 	}
 
-	this.select = function(el) {
 
-		let result = document.querySelectorAll(el);
-		if(el.indexOf("#") !== -1) { return result[0]; }
+	this.select = function(needle,hayStack=document) {
+
+		let selectFrom = hayStack;
+
+		if(hayStack !== document) { 
+			if(typeof hayStack === 'string') { selectFrom = document.querySelector(hayStack); }
+			else { selectFrom = hayStack; }	
+		}
+		
+
+		let result = selectFrom.querySelectorAll(needle);
+		
+		if(needle.indexOf("#") !== -1) { return result[0]; }
 		else { return Array.from(result); }
+		
+
 	}
 
 	this.import = function(imp,the) {
@@ -245,13 +258,13 @@ function GoingUI(viewElement = -1,animate=true) {
 
 	this.changeView = function() {
 		
-		let pel = this; 
-		console.log('t',pel);
+
+		if(!app.isset(location.hash)) { return false; }
+
 
 		let elemental = document.querySelector(pel.viewElement);
 		let toBe = location.hash.replace("#","");
 		elemental.innerHTML = pel.create(pel.views[toBe],{}).innerHTML;
-		if(typeof pel.registry[pel.views[toBe]] == "function") { pel.registry[pel.views[toBe]].script(); }
 		pel.bind(this.viewElement);
 
 		
@@ -266,7 +279,10 @@ function GoingUI(viewElement = -1,animate=true) {
 		}
 
 		this.select("input").forEach(el=>{el.placeholder = el.placeholder == "" ? " " : el.placeholder; });
+
 	}
+
+	this.isset = function(data) { if(typeof data === "undefined") { return false; } if(data === null) { return false; } if(Array.isArray(data)) { if(data.length === 0) { return false; } } if(data === "") { return false; } return true; }
 
 	this.setViewElement = function(vE,anim=this.animate) {
 
@@ -277,9 +293,8 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		if(document.querySelectorAll(vE).length > 0) {
 			
-			let pel = this; 
 			window.addEventListener("hashchange", function() { pel.changeView(); });
-			window.addEventListener("load",  ev=>{pel.changeView()});
+			window.addEventListener("load",  ev=>{ pel.changeView()});
 		}
 	}
 	
