@@ -1,23 +1,29 @@
 function GoingUI(viewElement = -1,animate=true) {
 	
-	var pel = this;
+	var thisUI = this;
 
 	this.registry = {}
 	this.data = {}
 	this.views = {};
 	this.viewElement = viewElement;
 	this.started = false;
-	this.animate = animate;
+	this.animate = animate; 
 
-	this.set = function(varv,val=-1, caller='not input') {
 
-		if(typeof varv === "object") {
+	this.goingStyle = document.createElement("style");
+	document.head.appendChild(this.goingStyle);
 
-			Object.assign(this.data,varv)
+	customElements.define("going-content", class extends HTMLElement { constructor() { super(); } });
+
+	this.set = function(toSet, setTo=-1, caller='not input') {
+
+		if(typeof toSet === "object") {
+
+			Object.assign(this.data,toSet)
 			
 		}
 		else {
-			this.data[varv] = val;
+			this.data[toSet] = setTo;
 
 		}
 		this.update(caller);
@@ -32,6 +38,19 @@ function GoingUI(viewElement = -1,animate=true) {
 			return undefined;
 		}
 	}
+
+	this.script = function(element) {
+		
+
+		if(typeof element === "string") { 
+			if(typeof this.registry[element] !== "undefined") {
+				if(typeof this.registry[element].script === "function") { return this.registry[element].script(); }
+			}
+		}
+		else if(typeof element === "object") {
+			if(typeof element.script === "function") { element.script(); }
+		}
+	}
 	
 	
 	this.init = function(vE = -1, anim=this.animate) {
@@ -39,21 +58,19 @@ function GoingUI(viewElement = -1,animate=true) {
 		if(vE !== -1) { this.setViewElement(vE,anim); }
 
 		this.started = true;
+	
 		
-		let arr = this.select(".jbui");
-		
-		
-		
-		this.select(".jbui").forEach(function(el) {
+		this.select(".goui").forEach(function(el) {
 			
 			
 			if(typeof el.dataset.template == "undefined") {
+
 				this.registry[el.dataset.jname] = {"element":el};
 				el.remove();
 			}
 			else {
 				
-				el.outerHTML = this.create(el.dataset.template,{}).outerHTML;
+				this.create(el.dataset.template,{},el);
 				
 			}
 
@@ -61,6 +78,7 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		this.bind();
 		this.update();
+ 
 
 	}
 	this.bind = function(element = -1) {
@@ -80,14 +98,17 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		element.forEach(el=>{
 
-			console.log(el);
+			if(!thisUI.isset(el.dataset.bound)) {
 
-			let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
-			el.addEventListener("keypress",ev=>{ pel.set(name,el.value,'input'); });
-			el.addEventListener("keyup",ev=>{ pel.set(name,el.value, 'input'); });
-			el.addEventListener("change",ev=>{ pel.set(name,el.value,'input'); });
-			
-			if(typeof pel.data[name] == "undefined") { pel.data[name] = el.value; }
+				let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
+				el.addEventListener("keypress",ev=>{ thisUI.set(name,el.value,'input'); });
+				el.addEventListener("keyup",ev=>{ thisUI.set(name,el.value, 'input'); });
+				el.addEventListener("change",ev=>{ thisUI.set(name,el.value,'input'); });
+				
+				if(typeof thisUI.data[name] == "undefined") { thisUI.data[name] = el.value; }
+
+				el.dataset.jbound = 1;
+			} 
 		});
 
 		this.update();
@@ -98,21 +119,26 @@ function GoingUI(viewElement = -1,animate=true) {
 		
 		this.select('.jmodel').forEach(el=>{
 			
-			let jname = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
+			let jname = 
+				thisUI.isset(el.dataset.bind) ? el.dataset.bind : 
+				thisUI.isset(el.dataset.jname) ? el.dataset.jname :
+				thisUI.isset(el.dataset.innerhtml) ? el.dataset.innerhtml : "";
+
 			
-			if(typeof el.dataset.attr != "undefined") {
+			if(thisUI.isset(el.dataset.attr)) {
 				
 				if(el.dataset.attr.indexOf(".") === -1) {
-					el[el.dataset.attr] = this.data[jname];
+					
+					el[el.dataset.attr] = thisUI.data[jname];
 				}
 				else {
 					let atrchain = el.dataset.attr.split(".");
-					el[atrchain[0]][atrchain[1]] = this.data[jname];
+					el[atrchain[0]][atrchain[1]] = thisUI.data[jname];
 					 
 				}
 			}
-			else if(typeof this.data[el.dataset.value] != "undefined") { el.value = this.data[el.dataset.value]; }
-			else { el.innerHTML = typeof this.data[jname] != "undefined" ? this.data[jname] : ""; }
+			else if(typeof this.data[el.dataset.value] != "undefined") { el.value = thisUI.data[el.dataset.value]; }
+			else { el.innerHTML = typeof thisUI.data[jname] != "undefined" ? thisUI.data[jname] : ""; }
 
 		},this);
 		
@@ -128,90 +154,70 @@ function GoingUI(viewElement = -1,animate=true) {
 		}
 	}
 
+	//updateUserData({...props.userData, "emailEnabled": masterDoc.data().emailsEnabled});
+
 	this.register = function(templateName, templateData) {
 
 		if(typeof this.registry[templateName] != "undefined") { console.warn("Template '" + templateName + "' was already defined."); }
  
-		let holderDiv = document.createElement("template");
+		let holderDiv = document.createElement("div");
 		holderDiv.innerHTML = typeof templateData == "object" ? templateData.html : templateData;
+
+		this.registry[templateName] = {"element":holderDiv,"script":templateData.script,"css":templateData.css};
 
 		if(typeof templateData.view != "undefined") { 
 			this.bind(holderDiv.content); 
 			this.views[templateData.view] = templateName; 
 		}
-
-		let superSnake = "";
-		if(templateName.indexOf("-") === -1) {
-			
-			let mat = templateName.match(/(^[a-z]|[A-Z0-9])[a-z]*/g);
-			
-			if(mat.length > 1) {
-				superSnake = mat.join("-").toLowerCase();
-				console.warn("Template name did not contain a -, but contained camelcase. Template name has been converted to '" + superSnake + "' to make it valid HTML.");
-			}
-			else if(mat.length == 1) {
-			
-				console.warn("Template name '" + templateName + "' did not contain a -. '-template' has been appended to the end of the template name.");
-				superSnake = mat[0].toLowerCase() + "-template";
-			}
-			else {
-				console.warn("Invalid template name '" + templateName + "'.");
-			}
-		}
-		else { superSnake = templateName; }
-
-		if(superSnake != "") {
- 
-			let newElement = customElements.define(superSnake,
-				class extends HTMLElement {
-					constructor() {
-						super();
-						this.outerHTML = typeof templateData == "object" ? templateData.html : templateData;
-						if(typeof templateData.script == 'function') { templateData.script(this.content); } 
-					}
-				}
-			);
-			
-			this.registry[superSnake] = {"element":holderDiv,"script":templateData.script};
-			
-			if(typeof templateData.view != "undefined") { this.views[superSnake] = templateName; }
-		}
-		
-		
 	}
 
-	this.create = function(componentToCreate, inputs) {
+	this.create = function(componentToCreate, inputs, returnObjectAndScript=false) {
 
 		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.warn("Unregistered component or view '" + componentToCreate + "'."); return false; }
 
 		let newElement = this.registry[componentToCreate].element.cloneNode(true);
-		let sarray = Array.from(newElement.getElementsByClassName('jelement')).concat(newElement);
+		let sarray = Array.from(newElement.getElementsByClassName('gofield')).concat(newElement).concat(Array.from(newElement.querySelectorAll("[data-gofield]")));
 
 		sarray.forEach(function(thisElement) {
 
-			for(v in inputs) { 
 
-				if(thisElement.dataset.jname === v) {
+			let jname = thisUI.isset(thisElement.dataset.gofield) ? thisElement.dataset.gofield :
+				thisUI.isset(thisElement.dataset.jname) ? thisElement.dataset.jname : "";
 
-					let thisInput = inputs[v];
+			if(thisUI.isset(inputs[jname])) {
 
-					for(property in thisInput) {
+				let thisInput = inputs[jname];
 
-						if(property === "data" || property === "dataset") { for(dataProperty in thisInput[property]) { thisElement.dataset[dataProperty] = thisInput[property][dataProperty]; } }
-						else if(property === "style") { for(styleProperty in thisInput[property]) { thisElement.style[styleProperty] = thisInput[property][styleProperty]; } }
-						else { thisElement[property] = thisInput[property]; }
-					}
+				for(property in thisInput) {
 
+					if(property === "data" || property === "dataset") { for(dataProperty in thisInput[property]) { thisElement.dataset[dataProperty] = thisInput[property][dataProperty]; } }
+					else if(property === "style") { for(styleProperty in thisInput[property]) { thisElement.style[styleProperty] = thisInput[property][styleProperty]; } }
+					else { thisElement[property] = thisInput[property]; }
 				}
 			}
 		});
 
 		
 		this.bind(newElement);
+ 
+		if(thisUI.isset(this.registry[componentToCreate].css)) { 
+
+			if(thisUI.goingStyle.innerHTML.indexOf("/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */") === -1) {
+				thisUI.goingStyle.innerHTML += "/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */" + this.registry[componentToCreate].css + " /* GOINGUI-ENDSTYLE */"; 
+			}
+		}
 		
-		if(typeof this.registry[componentToCreate].script == 'function') { this.registry[componentToCreate].script(newElement.content); }
-		
-		return newElement;
+		if(returnObjectAndScript === true) { return {'element':newElement,"script":this.registry[componentToCreate].script,"css":this.registry[componentToCreate].css} } 
+		if(typeof returnObjectAndScript === "object") {
+			let oldInner = returnObjectAndScript.innerHTML;
+			if(newElement.querySelector("going-content") != null) { newElement.querySelector("going-content").outerHTML=oldInner; }
+			returnObjectAndScript.outerHTML = newElement.innerHTML;
+			thisUI.script(componentToCreate);
+		}
+		else {
+			
+			return newElement;
+		}
 
 	}
 
@@ -256,19 +262,26 @@ function GoingUI(viewElement = -1,animate=true) {
 		 
 	}
 
-	this.changeView = function() {
+	this.getElement = function(el) {
+		return this.registry[el];
+	}
+
+	this.changeView = function(vw = -1) {
 		
+		if(vw !== -1) { location.hash = vw; }
+		if(!this.isset(location.hash)) { return false; } 
 
-		if(!app.isset(location.hash)) { return false; }
-
-
-		let elemental = document.querySelector(pel.viewElement);
+		let elemental = document.querySelector(thisUI.viewElement);
 		let toBe = location.hash.replace("#","");
-		elemental.innerHTML = pel.create(pel.views[toBe],{}).innerHTML;
-		pel.bind(this.viewElement);
+
+		let newElement = thisUI.create(thisUI.views[toBe],{}, true);
+
+		elemental.innerHTML = newElement.element.innerHTML;
+		thisUI.bind(this.viewElement);
+		thisUI.script(newElement);//.script();
 
 		
-		if(pel.animate) {
+		if(thisUI.animate) {
 
 			elemental.style.transition = "opacity 0s";
 			elemental.style.opacity = 0;
@@ -293,8 +306,8 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		if(document.querySelectorAll(vE).length > 0) {
 			
-			window.addEventListener("hashchange", function() { pel.changeView(); });
-			window.addEventListener("load",  ev=>{ pel.changeView()});
+			window.addEventListener("hashchange", function() { thisUI.changeView(); thisUI.bind(); });
+			window.addEventListener("load",  ev=>{ thisUI.changeView(); thisUI.bind(); });
 		}
 	}
 	
