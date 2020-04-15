@@ -171,28 +171,37 @@ function GoingUI(viewElement = -1,animate=true) {
 		}
 	}
 
-	this.create = function(componentToCreate, inputs, returnObjectAndScript=false) {
+	this.create = function(componentToCreate, customProperties, returnObjectAndScript=false) {
 
+		//Search the registry--return false if the requested component wasn't registered
 		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.warn("Unregistered component or view '" + componentToCreate + "'."); return false; }
 
+		//Create a copy of the element in registry
 		let newElement = this.registry[componentToCreate].element.cloneNode(true);
-		let sarray = Array.from(newElement.getElementsByClassName('gofield')).concat(newElement).concat(Array.from(newElement.querySelectorAll("[data-gofield]")));
+		
+		//Compile an array of all the gofields (fields to be customized)
+		let goElements = Array.from(newElement.getElementsByClassName('gofield')).concat(newElement).concat(Array.from(newElement.querySelectorAll("[data-gofield]")));
 
-		sarray.forEach(function(thisElement) {
+		//Go through them as goElement
+		goElements.forEach(function(goElement) {
 
+			//There's a bunch of ways you can specify the name of the gofield--figure out how they specified it.
+			let fieldName = thisUI.isset(goElement.dataset.gofield) ? goElement.dataset.gofield :
+				thisUI.isset(goElement.dataset.jname) ? goElement.dataset.jname : "";
 
-			let jname = thisUI.isset(thisElement.dataset.gofield) ? thisElement.dataset.gofield :
-				thisUI.isset(thisElement.dataset.jname) ? thisElement.dataset.jname : "";
+			//If custom properties were supplied under this fieldname
+			if(thisUI.isset(customProperties[fieldName])) {
 
-			if(thisUI.isset(inputs[jname])) {
+				//Shorthand the properties as 'theseProperties'
+				let theseProperties = customProperties[fieldName];
 
-				let thisInput = inputs[jname];
+				//Run through the properties object
+				for(property in theseProperties) {
 
-				for(property in thisInput) {
-
-					if(property === "data" || property === "dataset") { for(dataProperty in thisInput[property]) { thisElement.dataset[dataProperty] = thisInput[property][dataProperty]; } }
-					else if(property === "style") { for(styleProperty in thisInput[property]) { thisElement.style[styleProperty] = thisInput[property][styleProperty]; } }
-					else { thisElement[property] = thisInput[property]; }
+					//Set the custom values for the goElement
+					if(property === "data" || property === "dataset") { for(dataProperty in theseProperties[property]) { goElement.dataset[dataProperty] = theseProperties[property][dataProperty]; } }
+					else if(property === "style") { for(styleProperty in theseProperties[property]) { goElement.style[styleProperty] = theseProperties[property][styleProperty]; } }
+					else { goElement[property] = theseProperties[property]; }
 				}
 			}
 		});
