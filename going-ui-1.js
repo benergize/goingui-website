@@ -160,7 +160,7 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		if(typeof this.registry[templateName] != "undefined") { console.warn("Template '" + templateName + "' was already defined."); }
  
-		let holderDiv = document.createElement("div");
+		let holderDiv = document.createElement("template");
 		holderDiv.innerHTML = typeof templateData == "object" ? templateData.html : templateData;
 
 		this.registry[templateName] = {"element":holderDiv,"script":templateData.script,"css":templateData.css};
@@ -181,9 +181,12 @@ function GoingUI(viewElement = -1,animate=true) {
 		
 		//Compile an array of all the gofields (fields to be customized)
 		let goElements = Array.from(newElement.getElementsByClassName('gofield')).concat(newElement).concat(Array.from(newElement.querySelectorAll("[data-gofield]")));
+		console.log(goElements);
 
 		//Go through them as goElement
 		goElements.forEach(function(goElement) {
+		//for(let v = 0; v < goElements.length; v++) {
+
 
 			//There's a bunch of ways you can specify the name of the gofield--figure out how they specified it.
 			let fieldName = thisUI.isset(goElement.dataset.gofield) ? goElement.dataset.gofield :
@@ -206,8 +209,11 @@ function GoingUI(viewElement = -1,animate=true) {
 			}
 		});
 
+		console.log(goElements);
+
 		
 		this.bind(newElement);
+ 
  
 		if(thisUI.isset(this.registry[componentToCreate].css)) { 
 
@@ -215,6 +221,8 @@ function GoingUI(viewElement = -1,animate=true) {
 				thisUI.goingStyle.innerHTML += "/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */" + this.registry[componentToCreate].css + " /* GOINGUI-ENDSTYLE */"; 
 			}
 		}
+
+		newElement = newElement.content;
 		
 		if(returnObjectAndScript === true) { return {'element':newElement,"script":this.registry[componentToCreate].script,"css":this.registry[componentToCreate].css} } 
 		if(typeof returnObjectAndScript === "object") {

@@ -12,7 +12,7 @@ app.register("home-view", {
     <hr/>
 
     <input type = 'text' class = 'jbind' data-jname = 'exampleModel' value = 'Input &lt;3 Span'> 
-    <span class = 'jmodel' data-jname = 'exampleModel'></span>
+    <span class = 'jmodel' data-jname = 'exampleModel' data-attr='innerHTML'></span>
 
   `,
   "script":function(){ },
