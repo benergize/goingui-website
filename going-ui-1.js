@@ -117,7 +117,7 @@ function GoingUI(viewElement = -1,animate=true) {
 	this.update = function(caller){
 		
 		
-		this.select('.jmodel').forEach(el=>{
+		thisUI.select("[data-gomodel]").concat(this.select('.jmodel')).forEach(el=>{
 			
 			let jname = 
 				thisUI.isset(el.dataset.bind) ? el.dataset.bind : 
@@ -133,8 +133,40 @@ function GoingUI(viewElement = -1,animate=true) {
 				}
 				else {
 					let atrchain = el.dataset.attr.split(".");
-					el[atrchain[0]][atrchain[1]] = thisUI.data[jname];
-					 
+					el[atrchain[0]][atrchain[1]] = thisUI.data[jname]; 
+				}
+			}
+			else if(thisUI.isset(el.dataset.attrs) || thisUI.isset(el.dataset.gomodel)) {
+
+			//	console.log(el.dataset.attrs);
+
+				try {
+
+					let attrTarget = thisUI.isset(el.dataset.attrs) ? el.dataset.attrs : el.dataset.gomodel;
+					let attrs = JSON.parse(attrTarget);
+					//console.log(attrs,attrTarget);
+					//console.log(parseJSON(el.dataset.attrs));
+
+					if(typeof attrs == "object") {
+
+						for(let attribute in attrs) {
+							//el[attr] = thisUI.isset(thisUI.data[attrs[attr]]) ? thisUI.data[attrs[attr]] : "";
+
+							let dataFrom = attrs[attribute]; 
+
+							if(attribute.indexOf(".") === -1) {
+					
+								el[attribute] = thisUI.data[dataFrom];
+							}
+							else {
+								let atrchain = attribute.split(".");
+								el[atrchain[0]][atrchain[1]] = thisUI.data[dataFrom]; 
+							}
+						}
+					}
+				}
+				catch(e) {
+					console.warn("Invalid JSON at " + jname + ": " + String(e));
 				}
 			}
 			else if(typeof this.data[el.dataset.value] != "undefined") { el.value = thisUI.data[el.dataset.value]; }
@@ -163,6 +195,8 @@ function GoingUI(viewElement = -1,animate=true) {
 		let holderDiv = document.createElement("template");
 		holderDiv.innerHTML = typeof templateData == "object" ? templateData.html : templateData;
 
+		let script = typeof templateData.script != "undefined" ? templateData.script : typeof templateData.js != "undefined" ? templateData.js : function(){};
+
 		this.registry[templateName] = {"element":holderDiv,"script":templateData.script,"css":templateData.css};
 
 		if(typeof templateData.view != "undefined") { 
@@ -171,17 +205,32 @@ function GoingUI(viewElement = -1,animate=true) {
 		}
 	}
 
-	this.create = function(componentToCreate, customProperties, returnObjectAndScript=false) {
+	this.create = function(componentToCreate, customProperties={}, returnObjectAndScript=false) {
 
 		//Search the registry--return false if the requested component wasn't registered
 		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.warn("Unregistered component or view '" + componentToCreate + "'."); return false; }
 
 		//Create a copy of the element in registry
 		let newElement = this.registry[componentToCreate].element.cloneNode(true);
+
+		//console.log(componentToCreate,newElement,newElement.content.querySelectorAll('[data-template]'));
+
+		/*newElement.content.querySelectorAll('[data-template]').forEach(function(el) {
+			
+			console.log(el,newElement);
+			
+			newElement.content.querySelector(el)[0].outerHTML= this.create(el.dataset.template,{}).innerHTML;
+				
+			
+
+		},this);*/
+/*
+		this.bind();
+		this.update();*/
 		
 		//Compile an array of all the gofields (fields to be customized)
-		let goElements = Array.from(newElement.getElementsByClassName('gofield')).concat(newElement).concat(Array.from(newElement.querySelectorAll("[data-gofield]")));
-		console.log(goElements);
+		let goElements = Array.from(newElement.content.querySelectorAll('.gofield')).concat(Array.from(newElement.content.querySelectorAll("[data-gofield]")));
+		//console.log(goElements);
 
 		//Go through them as goElement
 		goElements.forEach(function(goElement) {
@@ -209,7 +258,7 @@ function GoingUI(viewElement = -1,animate=true) {
 			}
 		});
 
-		console.log(goElements);
+		//console.log(goElements);
 
 		
 		this.bind(newElement);
@@ -222,13 +271,20 @@ function GoingUI(viewElement = -1,animate=true) {
 			}
 		}
 
-		newElement = newElement.content;
+		//newElement = newElement.content;
 		
 		if(returnObjectAndScript === true) { return {'element':newElement,"script":this.registry[componentToCreate].script,"css":this.registry[componentToCreate].css} } 
 		if(typeof returnObjectAndScript === "object") {
+		
+			//Content to put inside the new element
 			let oldInner = returnObjectAndScript.innerHTML;
 			if(newElement.querySelector("going-content") != null) { newElement.querySelector("going-content").outerHTML=oldInner; }
+			
+			//Replace the target element with the new element
 			returnObjectAndScript.outerHTML = newElement.innerHTML;
+
+			//console.log(newElement);
+			
 			thisUI.script(componentToCreate);
 		}
 		else {
@@ -293,7 +349,8 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		let newElement = thisUI.create(thisUI.views[toBe],{}, true);
 
-		elemental.innerHTML = newElement.element.innerHTML;
+		elemental.innerHTML = "";
+		elemental.appendChild(newElement.element.content);
 		thisUI.bind(this.viewElement);
 		thisUI.script(newElement);//.script();
 
@@ -313,6 +370,7 @@ function GoingUI(viewElement = -1,animate=true) {
 	}
 
 	this.isset = function(data) { if(typeof data === "undefined") { return false; } if(data === null) { return false; } if(Array.isArray(data)) { if(data.length === 0) { return false; } } if(data === "") { return false; } return true; }
+	this.json = function(data) { return typeof data === "object" ? JSON.stringify(data) : JSON.parse(data); }
 
 	this.setViewElement = function(vE,anim=this.animate) {
 
