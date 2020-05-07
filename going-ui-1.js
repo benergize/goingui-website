@@ -381,7 +381,7 @@ function GoingUI(viewElement = -1,animate=true) {
 
 		if(document.querySelectorAll(vE).length > 0) {
 			
-			window.addEventListener("hashchange", function() { thisUI.changeView(); thisUI.bind(); });
+			//window.addEventListener("hashchange", function() { thisUI.changeView(); thisUI.bind(); });
 			window.addEventListener("load",  ev=>{ thisUI.changeView(); thisUI.bind(); });
 		}
 	}
