@@ -11,8 +11,8 @@ app.register("home-view", {
 
     <hr/>
 
-    <input type = 'text' class = 'jbind' data-jname = 'exampleModel' value = 'Input &lt;3 Span'> 
-    <span class = 'jmodel' data-jname = 'exampleModel' data-attr='innerHTML'></span>
+    <input type = 'text' data-gobind = 'exampleModel' value = 'Input &lt;3 Span'> 
+    <span data-gomodel='{"innerHTML":"exampleModel"}'></span>
 
   `,
   "script":function(){ },

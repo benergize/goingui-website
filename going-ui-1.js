@@ -5,6 +5,7 @@ function GoingUI(viewElement = -1,animate=true) {
 	this.registry = {}
 	this.data = {}
 	this.views = {};
+	this.view = "";
 	this.viewElement = viewElement;
 	this.started = false;
 	this.animate = animate; 
@@ -60,17 +61,20 @@ function GoingUI(viewElement = -1,animate=true) {
 		this.started = true;
 	
 		
-		this.select(".goui").forEach(function(el) {
+		this.select(".goui").concat(this.select("[data-going-template]")).forEach(function(el) {
 			
+
 			
-			if(typeof el.dataset.template == "undefined") {
+			if(typeof el.dataset.template == "undefined" && typeof el.dataset.goingTemplate == "undefined") {
 
 				this.registry[el.dataset.jname] = {"element":el};
 				el.remove();
 			}
 			else {
 				
-				this.create(el.dataset.template,{},el);
+				this.create(
+					typeof el.dataset.template !== "undefined" ? el.dataset.template : el.dataset.goingTemplate,
+				{},el);
 				
 			}
 
@@ -85,29 +89,32 @@ function GoingUI(viewElement = -1,animate=true) {
 
 
 		if(element === -1) { 
-			element = this.select('.jbind');
+			element = document.querySelectorAll("[data-gobind]");
 		}
 		else {
-			if(typeof element === "string") { element = document.querySelector(element).querySelectorAll('.jbind'); }
-			else { element = element.querySelectorAll('.jbind'); }
+
+			let fie = typeof element === "string" ? document.querySelector(element) : element; //fie=findInElement
+			 
+			element = Array.from(fie.querySelectorAll('.jbind')).concat(Array.from(fie.querySelectorAll("[data-gobind]")));
+			 
 		}
 
 		element = Array.from(element);
-
-		
+		 
 
 		element.forEach(el=>{
+ 
+			if(!thisUI.isset(el.dataset.gobound)) {
 
-			if(!thisUI.isset(el.dataset.bound)) {
+				let name = thisUI.isset(el.dataset.jname) ? el.dataset.jname : el.dataset.gobind;
 
-				let name = typeof el.dataset.jname != "undefined" ? el.dataset.jname : el.dataset.bind;
-				el.addEventListener("keypress",ev=>{ thisUI.set(name,el.value,'input'); });
-				el.addEventListener("keyup",ev=>{ thisUI.set(name,el.value, 'input'); });
-				el.addEventListener("change",ev=>{ thisUI.set(name,el.value,'input'); });
+				el.addEventListener("keypress", ev=>{ console.log(name); thisUI.set(name,el.type == "checkbox" ? el.checked : el.value,'input'); });
+				el.addEventListener("keyup", ev=>{ console.log(name); thisUI.set(name,el.type == "checkbox" ? el.checked : el.value, 'input'); });
+				el.addEventListener("change", ev=>{ console.log(name); thisUI.set(name,el.type == "checkbox" ? el.checked : el.value,'input'); });
 				
 				if(typeof thisUI.data[name] == "undefined") { thisUI.data[name] = el.value; }
 
-				el.dataset.jbound = 1;
+				//el.dataset.gobound = 1;
 			} 
 		});
 
@@ -117,7 +124,7 @@ function GoingUI(viewElement = -1,animate=true) {
 	this.update = function(caller){
 		
 		
-		thisUI.select("[data-gomodel]").concat(this.select('.jmodel')).forEach(el=>{
+		thisUI.select("[data-gomodel]").concat(thisUI.select('.gomodel')).concat(thisUI.select('.jmodel')).forEach(el=>{
 			
 			let jname = 
 				thisUI.isset(el.dataset.bind) ? el.dataset.bind : 
@@ -138,14 +145,15 @@ function GoingUI(viewElement = -1,animate=true) {
 			}
 			else if(thisUI.isset(el.dataset.attrs) || thisUI.isset(el.dataset.gomodel)) {
 
-			//	console.log(el.dataset.attrs);
+				//console.log(el.dataset.attrs);
 
 				try {
 
 					let attrTarget = thisUI.isset(el.dataset.attrs) ? el.dataset.attrs : el.dataset.gomodel;
 					let attrs = JSON.parse(attrTarget);
-					//console.log(attrs,attrTarget);
+					//.log(attrs,attrTarget);
 					//console.log(parseJSON(el.dataset.attrs));
+					
 
 					if(typeof attrs == "object") {
 
@@ -153,14 +161,50 @@ function GoingUI(viewElement = -1,animate=true) {
 							//el[attr] = thisUI.isset(thisUI.data[attrs[attr]]) ? thisUI.data[attrs[attr]] : "";
 
 							let dataFrom = attrs[attribute]; 
+							//console.log(dataFrom,attribute);
 
-							if(attribute.indexOf(".") === -1) {
-					
-								el[attribute] = thisUI.data[dataFrom];
+							if(attribute.indexOf(".") === -1 && String(dataFrom).indexOf(".") === -1) {
+				
+								//console.log(typeof attribute,attrs[attribute],attribute);
+
+								if(typeof attrs[attribute] === "object") {
+
+									let atrobj = attrs[attribute];
+
+									//let topattr = {};
+
+									for(let subattribute in atrobj) {
+										el[attribute][subattribute] = thisUI.data[atrobj[subattribute]];
+										//console.log(el[attribute][subattribute]);
+									}
+								}
+								else {
+									el[attribute] = thisUI.data[dataFrom];
+								}
+							}
+							else if(attribute.indexOf(".") !== -1 && String(dataFrom).indexOf(".") === -1) {
+
+								let atrchain = attribute.split(".");
+								//console.log(atrchain)
+								//el[atrchain[0]][atrchain[1]] = thisUI.data[dataFrom]; 
+
+								let propertyTarget = el; 
+								atrchain.forEach(elementProperty=>{
+									propertyTarget = propertyTarget[elementProperty];
+								});
+
+								propertyTarget = thisUI.data[dataFrom];
+							}
+							else if(attribute.indexOf(".") === -1 && String(dataFrom).indexOf(".") !== -1) {
+
+								let atrchain = attrs[attribute].split(".");
+								let dataTarget = app.data;
+								atrchain.forEach(property=>{ dataTarget = dataTarget[property];  });
+								
+								el[attribute] = dataTarget;
 							}
 							else {
-								let atrchain = attribute.split(".");
-								el[atrchain[0]][atrchain[1]] = thisUI.data[dataFrom]; 
+								throw "Guru meditation error.";
 							}
 						}
 					}
@@ -175,12 +219,21 @@ function GoingUI(viewElement = -1,animate=true) {
 		},this);
 		
 		if(caller != 'input') {
-			this.select('.jbind').forEach(el=>{
+			thisUI.select('[data-gobind]').forEach(el=>{
+ 
+				let bind = el.dataset.gobind;
+				//if(!thisUI.isset(el.dataset.gobound)) { thisUI.bind(); }
 				
-				let bind = typeof el.dataset.bind != "undefined" ? el.dataset.bind : el.dataset.jname;
-				
-				if(typeof this.data[bind] == "undefined") { this.data[bind] = el.value; this.update('input'); }
-				else { el.value = this.data[bind]; }
+				if(typeof thisUI.data[bind] == "undefined") { 
+					
+					if(el.type == "checkbox") { thisUI.data[bind] = el.checked; }
+					else { thisUI.data[bind]=el.value; }
+					thisUI.update('input'); 
+				}
+				else { 
+					if(el.type == "checkbox") { el.checked = thisUI.data[bind] }
+					else { el.value = thisUI.data[bind]; }
+				}
 				
 			}, this);
 		}
@@ -211,30 +264,14 @@ function GoingUI(viewElement = -1,animate=true) {
 		if(Object.keys(this.registry).indexOf(componentToCreate) === -1) { console.warn("Unregistered component or view '" + componentToCreate + "'."); return false; }
 
 		//Create a copy of the element in registry
-		let newElement = this.registry[componentToCreate].element.cloneNode(true);
-
-		//console.log(componentToCreate,newElement,newElement.content.querySelectorAll('[data-template]'));
-
-		/*newElement.content.querySelectorAll('[data-template]').forEach(function(el) {
-			
-			console.log(el,newElement);
-			
-			newElement.content.querySelector(el)[0].outerHTML= this.create(el.dataset.template,{}).innerHTML;
-				
-			
-
-		},this);*/
-/*
-		this.bind();
-		this.update();*/
+		let newElement = this.registry[componentToCreate].element.cloneNode(true); 
 		
 		//Compile an array of all the gofields (fields to be customized)
 		let goElements = Array.from(newElement.content.querySelectorAll('.gofield')).concat(Array.from(newElement.content.querySelectorAll("[data-gofield]")));
 		//console.log(goElements);
 
 		//Go through them as goElement
-		goElements.forEach(function(goElement) {
-		//for(let v = 0; v < goElements.length; v++) {
+		goElements.forEach(function(goElement) { 
 
 
 			//There's a bunch of ways you can specify the name of the gofield--figure out how they specified it.
@@ -266,8 +303,15 @@ function GoingUI(viewElement = -1,animate=true) {
  
 		if(thisUI.isset(this.registry[componentToCreate].css)) { 
 
-			if(thisUI.goingStyle.innerHTML.indexOf("/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */") === -1) {
-				thisUI.goingStyle.innerHTML += "/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */" + this.registry[componentToCreate].css + " /* GOINGUI-ENDSTYLE */"; 
+			//if(thisUI.goingStyle.innerHTML.indexOf("/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */") === -1) {
+			//	thisUI.goingStyle.innerHTML += "/* GOINGUI-GOINGSTYLE."+ componentToCreate +": */" + this.registry[componentToCreate].css + " /* GOINGUI-ENDSTYLE */"; 
+			//}
+
+			if(!thisUI.isset(thisUI.select("#goingstyle-" + Object.keys(thisUI.registry).indexOf(componentToCreate)))) {
+				let styleObject = document.createElement("style");
+				styleObject.id = "goingstyle-" + Object.keys(thisUI.registry).indexOf(componentToCreate);
+				styleObject.innerHTML = this.registry[componentToCreate].css
+				document.head.appendChild(styleObject);
 			}
 		}
 
@@ -283,8 +327,6 @@ function GoingUI(viewElement = -1,animate=true) {
 			//Replace the target element with the new element
 			returnObjectAndScript.outerHTML = newElement.innerHTML;
 
-			//console.log(newElement);
-			
 			thisUI.script(componentToCreate);
 		}
 		else {
@@ -344,24 +386,27 @@ function GoingUI(viewElement = -1,animate=true) {
 		if(vw !== -1) { location.hash = vw; }
 		if(!this.isset(location.hash)) { return false; } 
 
-		let elemental = document.querySelector(thisUI.viewElement);
+		let stage = document.querySelector(thisUI.viewElement);
 		let toBe = location.hash.replace("#","");
+		thisUI.view = toBe;
+		stage.dataset.view = toBe;
 
 		let newElement = thisUI.create(thisUI.views[toBe],{}, true);
 
-		elemental.innerHTML = "";
-		elemental.appendChild(newElement.element.content);
-		thisUI.bind(this.viewElement);
-		thisUI.script(newElement);//.script();
+		stage.innerHTML = "";
+		stage.appendChild(newElement.element.content);
+ 
+		thisUI.bind(thisUI.viewElement);
+		thisUI.script(newElement);
 
 		
 		if(thisUI.animate) {
 
-			elemental.style.transition = "opacity 0s";
-			elemental.style.opacity = 0;
+			stage.style.transition = "opacity 0s";
+			stage.style.opacity = 0;
 			setTimeout(ev=>{
-				elemental.style.transition = "opacity .15s";
-				elemental.style.opacity=1;
+				stage.style.transition = "opacity .15s";
+				stage.style.opacity=1;
 			},10);
 		}
 
@@ -382,7 +427,7 @@ function GoingUI(viewElement = -1,animate=true) {
 		if(document.querySelectorAll(vE).length > 0) {
 			
 			//window.addEventListener("hashchange", function() { thisUI.changeView(); thisUI.bind(); });
-			window.addEventListener("load",  ev=>{ thisUI.changeView(); thisUI.bind(); });
+			window.addEventListener("load",  ev=>{ thisUI.changeView();/* thisUI.bind(); */});
 		}
 	}
 	

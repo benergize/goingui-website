@@ -16,17 +16,17 @@
 	</head>
 	
 	<!-- jmodel one-way binds a variable to an attribute. In this case, variable bgc is setting the style.background of the body element -->
-	<body class = 'jmodel' data-attr='style.background' data-jname = 'bgc'>
+	<body data-gomodel='{"style":{"background":"bgc"}}'>
 		  
 		<header>
 			<h1 id = 'title'><a href = '#home'><span id = 'going'>Going-UI</span><span id = 'js'>.js</span></a></h1>
 			
-			<!-- The nav-bar in component form. This gets imported dat the bottom -->
-			<nav-bar></nav-bar>
+			<!-- The nav-bar in component form. This gets imported at the bottom -->
+			<nav class = 'goui' data-template = 'nav-bar'></nav>
 		</header>
 		
 		<!-- We use this element to display views. It's attached to the window hash -->
-		<div id = 'stage'><home-view></home-view></div>
+		<div id = 'stage'><div class = 'goui' data-template = 'home-view'></div></div>
 			
 		<!-- That's me! -->
 		<footer>
@@ -34,7 +34,7 @@
 			&bullet; 
 			
 			<!-- White is a little too light for me, so you can turn down the body background with this select element. -->
-			<light-select></light-select>
+			<div class = 'goui' data-template = 'light-select'></div>
 		</footer>
 		
 		<script>
